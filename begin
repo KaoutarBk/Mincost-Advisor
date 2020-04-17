@@ -1,0 +1,82 @@
+from tkinter import*
+from tkinter.tix import *
+import random
+import time
+
+root = Tk()
+root.geometry("1600x700+0+0")
+root.title("MinCost")
+
+Tops = Frame(root,width = 1600,height=700,relief=SUNKEN)
+Tops.pack(side=TOP)
+
+
+
+
+#------------------TIME--------------
+localtime=time.asctime(time.localtime(time.time()))
+
+#-----------------INFO TOP------------
+lblinfo = Label(Tops, font=( 'times new roman' ,30, 'bold underline' ),text="Minimum Cost Advisor",fg="darkgoldenrod4",bd=10,anchor='w')
+lblinfo.grid(row=0,column=0)
+
+lblinfo = Label(Tops, font=( 'times new roman' ,20, 'bold' ),text=localtime,fg="lightgoldenrod4",anchor=W)
+lblinfo.grid(row=1,column=0)
+
+lblBegin = Label(Tops, font=( 'times new roman' ,20, 'bold' ),text="Click to begin",fg="dark olive green",bd=10,anchor='w')
+lblBegin.grid(row=2,column=0)
+
+def nextStep():
+    # destroy all widgets from frame
+    for widget in Tops.winfo_children():
+        widget.destroy()
+    Tops.pack_forget()
+
+    #set next frame
+
+    test = Frame(root,width = 1200,height=500,relief=SUNKEN)
+    test.pack()
+
+    lblinfo = Label(test, font=( 'times new roman' ,30, 'bold' ),text="Saisissez vos données",fg="saddle brown",bd=10,anchor='w')
+    lblinfo.grid(row=0,column=0)
+
+    lblinfo = Label(test, font=( 'times new roman' ,20, 'bold' ),text="Nombre de fournisseurs:",fg="dark olive green",anchor=W)
+    lblinfo.grid(row=1,column=0)
+
+    lblinfo = Label(test, font=( 'times new roman' ,20, 'bold' ),text="Nombre de points de transbordement:",fg="dark olive green",anchor=W)
+    lblinfo.grid(row=2,column=0)
+
+    lblinfo = Label(test, font=( 'times new roman' ,20, 'bold' ),text="Nombre de clients:",fg="dark olive green",anchor=W)
+    lblinfo.grid(row=3,column=0)
+
+    lblinfo = Label(test, font=( 'times new roman' ,20, 'bold' ),text="Nombre d'arcs:",fg="dark olive green",anchor=W)
+    lblinfo.grid(row=4,column=0)
+
+
+    NbreFournisseur = Entry(test,width=30)
+    NbreFournisseur.grid(row=1,column=1)
+
+    NbreTrsbrdmnt = Entry(test,width=30)
+    NbreTrsbrdmnt.grid(row=2,column=1)
+
+    NbreClient = Entry(test,width=30)
+    NbreClient.grid(row=3,column=1)
+
+    NbreArc = Entry(test,width=30)
+    NbreArc.grid(row=4,column=1)
+
+
+b = Button(Tops , text = " OK " , command = nextStep)
+b.grid()
+
+
+#---------------BEGIN------------------
+
+
+
+
+
+
+#---------------MAINLOOP---------------
+root.mainloop()
+
