@@ -1,82 +1,483 @@
-from tkinter import*
+from tkinter import *
 from tkinter.tix import *
-import random
 import time
+import os
+from tkinter import messagebox
+import numpy as np
+from scipy.optimize import linprog
 
-root = Tk()
+root = Tk()  # setting up the window
 root.geometry("1600x700+0+0")
-root.title("MinCost")
+root.title("MinCost Network Flow ADVISOR")
+root.iconbitmap(r'C:\Users\Kaoutar\Downloads\School\PFA\test.ico')
 
-Tops = Frame(root,width = 1600,height=700,relief=SUNKEN)
+#stop script from running and destroy the window
+def quitter():
+    if messagebox.askokcancel("Quitter", "Voulez-vous quitter?"):
+        try:
+            file.write("\n\nMerci d'avoir utilisé MinCost Network Flow ADVISOR\nA la prochaine")
+            file.close()
+        except:
+            print("file not created yet")
+        root.destroy()
+        os._exit(0)
+
+root.protocol("WM_DELETE_WINDOW", quitter)
+
+user = ""
+f = t = c = m = n = 0  # global variables
+okVar = IntVar()  # variables used to wait for a step to end before going to the next
+okVar2 = IntVar()
+okVar3 = IntVar()
+# -----------------FRAMES-------------
+Tops = Frame(root, width=1600, height=700, relief=SUNKEN)
 Tops.pack(side=TOP)
 
+test = Frame(root, width=1200, height=500, relief=SUNKEN)
+
+# ------------------TIME--------------
+localtime = time.asctime(time.localtime(time.time()))
 
 
+# -----------------FIRST STEP----------
 
-#------------------TIME--------------
-localtime=time.asctime(time.localtime(time.time()))
+lblinfo = Label(Tops, font=('times new roman', 30, 'bold underline'), text="\nMinCost Network Flow ADVISOR\n", fg="seagreen", bd=10, anchor='w')
+lblinfo.grid(row=1, column=0)
 
-#-----------------INFO TOP------------
-lblinfo = Label(Tops, font=( 'times new roman' ,30, 'bold underline' ),text="Minimum Cost Advisor",fg="darkgoldenrod4",bd=10,anchor='w')
-lblinfo.grid(row=0,column=0)
+lblinfo = Label(Tops, font=('times new roman', 12, 'bold'), text=localtime, fg="silver", anchor=W)
+lblinfo.grid(row=0, column=0)
 
-lblinfo = Label(Tops, font=( 'times new roman' ,20, 'bold' ),text=localtime,fg="lightgoldenrod4",anchor=W)
-lblinfo.grid(row=1,column=0)
+lblinfo = Label(Tops, font=('times new roman', 18, 'bold'), text="Veuillez saisir votre nom pour commencer:\n\n", fg="darksalmon", anchor=W)
+lblinfo.grid(row=14, column=0)
 
-lblBegin = Label(Tops, font=( 'times new roman' ,20, 'bold' ),text="Click to begin",fg="dark olive green",bd=10,anchor='w')
-lblBegin.grid(row=2,column=0)
+NomUtilisateur = Entry(Tops, width=40,)
+NomUtilisateur.grid(row=18, column=0)
 
-def nextStep():
-    # destroy all widgets from frame
-    for widget in Tops.winfo_children():
+lblBegin = Label(Tops, font=('times new roman', 14, 'bold'), text="\n\n Pour plus d'informations appuyez sur AIDE\n", fg="darkseagreen",bd=10, anchor='w')
+lblBegin.grid(row=20, column=0)
+
+def stepOne():
+    if not NomUtilisateur.get():
+        messagebox.showerror("Données non saisies", "Choisissez un nom d'utilisateur pour continuer")
+    else:
+        global user
+        user = NomUtilisateur.get()
+
+        for widget in Tops.winfo_children():  # destroy all widgets from frame
+            widget.destroy()
+        Tops.pack_forget()#destroy frame
+
+        global test #new frame
+        test.pack()
+
+        global okVar3 #set variable
+        okVar3.set(1)
+
+def aide():
+     messagebox.showinfo("Aide","MinCost Network Flow ADVISOR est une application qui résout un problème de flot à coût minimum dans un réseau modélisé comme suit:\nSi vous avez besoin de livrer un produit à partir de plusieurs localisations où se trouvent vos fournisseurs\n vers plusieurs clients passant par différents points de transbordement,\nMinCost Network Flow ADVISOR est là pour vous aider à effectuer cette tâche avec le minimum des coûts.")
+
+buttonHelp = Button(Tops, text=" AIDE ", command = aide)
+buttonHelp.grid()
+
+buttonOne = Button(Tops, text=" COMMENCER ", command=stepOne)
+buttonOne.grid()
+buttonOne.wait_variable(okVar3)
+file = open("%s.txt" % user, "a+") #creates file
+
+# ---------------STEP TWO------------------
+
+lblinfo = Label(test, font=('times new roman', 10, 'bold underline'), text="MinCost Network Flow ADVISOR\n \n", fg="silver", bd=10, anchor='w')
+lblinfo.grid(row=0, column=0)
+
+lblinfo = Label(test, font=('times new roman', 18, 'bold'), text="Aidez nous à vous aider.\nOn a besoin de vos données pour résoudre votre problème de coût minimal.\nDécrivez nous votre réseau.\n  \n", fg="darkseagreen", bd=10,anchor='w')
+lblinfo.grid(row=1, column=0)
+
+lblinfo = Label(test, font=('times new roman', 16, 'bold'), text="Nombre de fournisseurs:", fg="darksalmon",
+                anchor=W)
+lblinfo.grid(row=4, column=0)
+
+lblinfo = Label(test, font=('times new roman', 16, 'bold'), text="Nombre de points de transbordement:", fg="darksalmon", anchor=W)
+lblinfo.grid(row=5, column=0)
+
+lblinfo = Label(test, font=('times new roman', 16, 'bold'), text="Nombre de clients:", fg="darksalmon", anchor=W)
+lblinfo.grid(row=6, column=0)
+
+lblinfo = Label(test, font=('times new roman', 16, 'bold'), text="Nombre d'arcs:\n", fg="darksalmon", anchor=W)
+lblinfo.grid(row=7, column=0)
+
+NbreFournisseur = Entry(test, width=30)
+NbreFournisseur.grid(row=4, column=1)
+
+NbreTrsbrdmnt = Entry(test, width=30)
+NbreTrsbrdmnt.grid(row=5, column=1)
+
+NbreClient = Entry(test, width=30)
+NbreClient.grid(row=6, column=1)
+
+NbreArc = Entry(test, width=30)
+NbreArc.grid(row=7, column=1)
+
+
+def getBasicInfo():  # saving info given in a file and going to the next step
+
+    if not NbreFournisseur.get() or not NbreTrsbrdmnt.get() or not NbreClient.get() or not NbreArc.get():
+        messagebox.showerror('Données non saisies',
+                             "Vous n'avez pas saisi toutes les données dont nous avons besoin pour résoudre votre problème de coût minimum")
+    else:
+        global f
+        f = NbreFournisseur.get()
+        global t
+        t = NbreTrsbrdmnt.get()
+        global c
+        c = NbreClient.get()
+        global m
+        m = NbreArc.get()
+        global user
+        file = open("%s.txt" % user, "a+")
+        file.write(
+            "DONNEES DE L'UTILISATEUR: " + user + "\n\nLe nombre de fournisseurs est:" + f + "\nLe nombre de points de transbordements est:" + t + "\nLe nombre de clients est:" + c + "\nLe nombre d'arcs est:" + m)
+
+        for widget in test.winfo_children(): #destroy frame and contents
+            widget.destroy()
+        test.pack_forget()
+
+
+        global okVar
+        okVar.set(1)
+
+
+buttonTwo = Button(test, text=" OK ", command=getBasicInfo) #next step
+buttonTwo.grid()
+buttonTwo.wait_variable(okVar)
+
+# ---------------THIRD STEP-------------
+
+canvas = Canvas(root, highlightthickness=0)
+scroll_y = Scrollbar(root, orient="vertical", command=canvas.yview)
+scroll_x = Scrollbar(root, orient="horizontal", command=canvas.xview)
+frame = Frame(canvas, width=1600, height=700, relief=SUNKEN)
+frame.pack()
+scroll_y.pack(fill='y', side='right')
+scroll_x.pack(fill='x', side='bottom')
+
+f = int(f)
+t = int(t)
+m = int(m)
+c = int(c)
+n = f + t + c
+
+#lists containing info
+noeuds = [0] * n
+bub = [0] * (m + f)
+beq = [0] * (t + c)
+C = [0] * m
+Aub = [[0] * m for i in range(m + f)]
+Aeq = [[0] * m for i in range(t + c)]
+B = [[0] * m for i in range(n)]  # contient toutes les valeurs des spinbox -- ne sert pas a grand chose apres
+
+# Un texte explicatif en haut
+lbl_entete = Label(frame,font=('times new roman', 14, 'bold'), text="Ce tableau regroupera toutes les informations nécessaires pour résoudre votre problème.\nVeuillez le remplir méticuleusement.\nSi vous trouvez une difficulté pour remplir un champ, cliquez dessus pour afficher l'explication.", fg="darkseagreen")
+lbl_entete.grid(row=0, column=0, columnspan=m + 14, rowspan=4)
+
+
+# Si on clique sur le Boutton Noeuds un msg explicatif s'affiche
+def clicked_noeuds():
+    messagebox.showinfo('Noeuds',
+                        "Veuillez saisir les noms de vos noeuds dans l'espace qui leur correspond selon leurs types:\n   *Noeud Fournisseur\n   *Point de Transbordement\n   *Noeud Client")
+
+
+# Titre et Boutton: "Noeuds"
+btn_noeuds = Button(frame, font=('times new roman', 10, 'bold'), text='Noeuds', width=45, command=clicked_noeuds)
+btn_noeuds.grid(row=4, column=0, columnspan=7, rowspan=2)
+
+
+# Si on clique sur le Boutton Arcs un msg explicatif s'affiche
+def clicked_arcs():
+    messagebox.showinfo('Arcs', 'Vous avez ' + str(m) + " arcs. Chaque arc est désigné par Ui allant de U0 "
+                                                        "jusqu à U" + str(
+        m - 1) + '. Vous êtes amenés à désigner pour chaque arc son noeud de départ'
+                 ' et celui de son arrivée.\nLa colonne qui correspond à l arc Ui contiendera deux cases '
+                 'différentes de 0:\n **Choisissez -1 sur la ligne qui correspond au noeud de départ de cet arc Ui.'
+                 '\n **Choisissez 1 sur la ligne qui corresond au noeud d arrivée de cet arc Ui.')
+
+
+# Titre et Bouton: "Arcs"
+btn_arcs = Button(frame, font=('times new roman', 10, 'bold'), text='Arcs', width=m * 5 + 20, command=clicked_arcs)
+btn_arcs.grid(row=4, column=7, columnspan=m, rowspan=1)
+
+# Les Ui
+for i in range(0, m):
+    lbl_Arc = Label(frame, text="U" + str(i))
+    lbl_Arc.grid(row=5, column=7 + i, columnspan=1, rowspan=1)
+
+
+# Si on clique sur Offre/Demande un msg explicatif s'affiche
+def clicked_offre_demande():
+    messagebox.showinfo('Offre/Demande', 'Veuillez remplir les champs Offre et Demande comme suit:\n Chaque '
+                                         'fournisseur a une capacité, veuillez désigner sur la ligne de chaque '
+                                         'fournisseur sa capacité respective dans la zone Offre.\n Chaque client a '
+                                         'une demande, veuillez entrer sur la ligne de chaque client sa demande '
+                                         'respective danz la zone Demande.')
+
+
+# Titre et Bouton: "Offre/Demande"
+btn_offre_demande = Button(frame, font=('times new roman', 10, 'bold'), text='Offre/Demande', width=15, command=clicked_offre_demande)
+btn_offre_demande.grid(row=4, column=m + 7, columnspan=7, rowspan=2)
+
+# Fournisseurs
+lbl_fournisseurs = Label(frame, text='Fournisseurs')
+lbl_fournisseurs.grid(row=6, column=0, columnspan=3, rowspan=f)
+
+# Espaces pour saisir les noms des fournisseurs
+for i in range(0, f):
+    noeuds[i] = Entry(frame, width=25)
+    noeuds[i].grid(row=6 + i, column=4, columnspan=3, rowspan=1)
+
+# Transbordement
+lbl_transbordement = Label(frame, text='Points de transbordement',bg="light grey")
+lbl_transbordement.grid(row=6 + f, column=0, columnspan=3, rowspan=t)
+# Espaces pour saisir les noms des points de transbordement
+for i in range(0, t):
+    noeuds[i + f] = Entry(frame, width=25, bg="light grey")
+    noeuds[i + f].grid(row=6 + f + i, column=4, columnspan=3, rowspan=1)
+
+# Clients
+lbl_clients = Label(frame, text='Clients')
+lbl_clients.grid(row=6 + f + t, column=0, columnspan=3, rowspan=c)
+# Espaces pour saisir les noms des noeuds
+for i in range(c):
+    noeuds[i + f + t] = Entry(frame, width=25)
+    noeuds[i + f + t].grid(row=6 + f + t + i, column=4, columnspan=3, rowspan=1)
+
+# Les id des noeuds
+for i in range(f + t + c):
+    btn_ids = Button(frame, text=i)
+    btn_ids.grid(row=6 + i, column=3, columnspan=1, rowspan=1)
+
+# Les cases à remplir de 1 et -1
+for i in range(n):
+    for j in range(m):
+        B[i][j] = Spinbox(frame, values=(0, -1, 1), state="readonly", width=5)
+        B[i][j].grid(row=6 + i, column=7 + j, columnspan=1, rowspan=1)
+
+# Offre
+lbl_offre = Label(frame, text='Offre')
+lbl_offre.grid(row=6, column=m + 12, columnspan=3, rowspan=f)
+# Espaces pour saisir Offre
+for i in range(0, f):
+    bub[i + m] = Entry(frame, width=10)
+    bub[i + m].grid(row=6 + i, column=m + 8, columnspan=4, rowspan=1)
+
+# Demande
+lbl_demand = Label(frame, text='Demande')
+lbl_demand.grid(row=6 + f + t + 1, column=m + 12, columnspan=3, rowspan=c)
+# Espaces pour saisir Demande
+for i in range(0, c):
+    beq[i + t] = Entry(frame, width=10)
+    beq[i + t].grid(row=6 + f + t + i, column=m + 8, columnspan=4, rowspan=1)
+
+
+# Si on clique sur MaxFlow un msg explicatif s'affiche
+def clicked_maxflow():
+    messagebox.showinfo('Maximum Flow', "Veuillez saisir le flow maximal que peut chaque arc Ui supporter")
+
+
+# Titre et boutton: MaxFlow
+btn_maxflow = Button(frame, font=('times new roman', 11, 'bold'), text='Maximum Flow', fg="darkseagreen", width=40, command=clicked_maxflow)
+btn_maxflow.grid(row=6 + f + t + c + 1, column=0, columnspan=7, rowspan=1)
+# Les cases pour saisir le maxflow de chaque arc
+for i in range(0, m):
+    bub[i] = Entry(frame, width=5, bg="darkseagreen")
+    bub[i].grid(row=6 + f + t + c + 1, column=7 + i, columnspan=1, rowspan=1)
+
+
+# Si on clique sur Cout un msg explicatif s'affiche
+def clicked_cout():
+    messagebox.showinfo('Coût', "Veuillez saisir le prix unitaire à payer pour envoyer via l'arc Ui")
+
+
+# Titre et boutton: Cout
+btn_cout = Button(frame, font=('times new roman', 11, 'bold'), text='Coût', fg="seagreen", width=40, command=clicked_cout)
+btn_cout.grid(row=6 + f + t + c + 2, column=0, columnspan=7, rowspan=1)
+# Les cases pour saisir le cout de chaque arc
+for i in range(0, m):
+    C[i] = Entry(frame, width=5, bg="seagreen")
+    C[i].grid(row=6 + f + t + c + 2, column=7 + i, columnspan=1, rowspan=1)
+
+canvas.create_window(0, 0, anchor='nw', window=frame)
+canvas.update_idletasks()
+canvas.configure(scrollregion=canvas.bbox('all'),
+                 yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+
+canvas.pack(fill='both', expand=True, side='left')
+
+# ---------------FOURTH STEP------
+
+def getDetailedInfo():
+    global noeuds
+    for i in range(n):
+        if not noeuds[i].get ():
+            messagebox.showerror('Données non saisies',
+                             "Vous n'avez pas saisi le nom du noeud numéro "+str(i))
+
+        else:
+            noeuds[i] = str(noeuds[i].get())
+
+    global bub
+    for i in range(m):  # recupere le maxflow
+        bub[i] = bub[i].get()
+    for i in range(m, m + f):  # recupere offre
+        bub[i] = bub[i].get()
+
+    global beq
+    for i in range(t, t + c):  # recupere demande
+        beq[i] = beq[i].get()
+
+    global C
+    for i in range(m):  # recupere les couts
+        C[i] = C[i].get()
+
+    global B
+    for i in range(n):
+        for j in range(m):
+            B[i][j] = int(B[i][j].get())
+
+    global A
+    for i in range(m):
+        Aub[i][i] = 1  # traduit xij<bij
+
+    for i in range(f):  # contraintes des fournisseurs
+        for j in range(m):
+            Aub[i + m][j] = -B[i][j]
+
+    for i in range(t):  # contraintes des pts de trsbdmnt
+        for j in range(m):
+            Aeq[i][j] = B[i + f][j]
+
+    for i in range(c):  # contraintes des clients
+        for j in range(m):
+            Aeq[i + t][j] = B[i + f + t][j]
+
+    for widget in frame.winfo_children():  # clear the window
         widget.destroy()
-    Tops.pack_forget()
+    canvas.destroy()
 
-    #set next frame
-
-    test = Frame(root,width = 1200,height=500,relief=SUNKEN)
-    test.pack()
-
-    lblinfo = Label(test, font=( 'times new roman' ,30, 'bold' ),text="Saisissez vos données",fg="saddle brown",bd=10,anchor='w')
-    lblinfo.grid(row=0,column=0)
-
-    lblinfo = Label(test, font=( 'times new roman' ,20, 'bold' ),text="Nombre de fournisseurs:",fg="dark olive green",anchor=W)
-    lblinfo.grid(row=1,column=0)
-
-    lblinfo = Label(test, font=( 'times new roman' ,20, 'bold' ),text="Nombre de points de transbordement:",fg="dark olive green",anchor=W)
-    lblinfo.grid(row=2,column=0)
-
-    lblinfo = Label(test, font=( 'times new roman' ,20, 'bold' ),text="Nombre de clients:",fg="dark olive green",anchor=W)
-    lblinfo.grid(row=3,column=0)
-
-    lblinfo = Label(test, font=( 'times new roman' ,20, 'bold' ),text="Nombre d'arcs:",fg="dark olive green",anchor=W)
-    lblinfo.grid(row=4,column=0)
+    global okVar2
+    okVar2.set(1)
 
 
-    NbreFournisseur = Entry(test,width=30)
-    NbreFournisseur.grid(row=1,column=1)
-
-    NbreTrsbrdmnt = Entry(test,width=30)
-    NbreTrsbrdmnt.grid(row=2,column=1)
-
-    NbreClient = Entry(test,width=30)
-    NbreClient.grid(row=3,column=1)
-
-    NbreArc = Entry(test,width=30)
-    NbreArc.grid(row=4,column=1)
-
-
-b = Button(Tops , text = " OK " , command = nextStep)
-b.grid()
-
-
-#---------------BEGIN------------------
+buttonThree = Button(frame, font=('times new roman', 10, 'bold'), text=" Terminé ", command=getDetailedInfo)
+buttonThree.grid(row=6 + f + t + c + 1, column=m + 7, columnspan=7, rowspan=2)
+buttonThree.wait_variable(okVar2)
 
 
 
 
+# _______________FIFTH STEP__________
+
+#from lists to arrays
+Aub = np.array(Aub)
+Aeq = np.array(Aeq)
+bub = np.array(bub)
+beq = np.array(beq)
+C = np.array(C)
+
+bounds = []
+for i in range(m):
+    bounds.append((0,bub[i]))
+
+#SIMPLEX
+res = linprog(C, A_ub=Aub, b_ub=bub, A_eq=Aeq, b_eq=beq, bounds=None, method='simplex', callback=None,
+              options={'disp': False, 'bland': False, 'tol': 1e-12, 'maxiter': 1000})
+
+#________________SIXTH STEP_____________
+
+Frame1 = Frame(root, width=1600, height=700, relief=SUNKEN)
+Frame1.pack(side=TOP)
+
+lblinfo = Label(Frame1, font=('times new roman', 10, 'bold underline'), text="MinCost Network Flow ADVISOR\n \n", fg="silver", bd=10, anchor='w')
+lblinfo.grid(row=0, column=1, columnspan=2)
+
+lbl_titre=Label(Frame1,font=('times new roman', 35, 'bold underline'), text="Rapport final\n", fg="seagreen")
+lbl_titre.grid(row=3, column=1, columnspan=2)
+
+file = open("%s.txt" % user, "a+")
+file.write("\n\\tRAPPORT FINAL\n")
 
 
-#---------------MAINLOOP---------------
+if res.status==0: #simplex succeeded
+    lbl_total=Label(Frame1, font=('times new roman', 20, 'bold'), text="Coût total du transport: " + str(res.fun) , fg="darksalmon")
+    lbl_total.grid(row=5, column=1, columnspan=2)
+    file.write("\nCoût total du tranport: "+ str(res.fun) )
+
+    lbl_from=Button(Frame1,font=('times new roman', 12, 'bold'), text="DEPART", width=20, fg="darkseagreen")
+    lbl_from.grid(row=7, column=0)
+
+    lbl_to=Button(Frame1,font=('times new roman', 12, 'bold'), text="ARRIVEE", width=20, fg="darkseagreen")
+    lbl_to.grid(row=7, column=1)
+
+    lbl_flow=Button(Frame1,font=('times new roman', 12, 'bold'), text="FLOW", width=20, fg="darkseagreen")
+    lbl_flow.grid(row=7, column=2)
+
+    lbl_total_cost=Button(Frame1,font=('times new roman', 12, 'bold'), text="COÛT", width=20, fg="darkseagreen")
+    lbl_total_cost.grid(row=7, column=3)
+
+    file = open("%s.txt" % user, "a+")
+    file.write("\n\nDe----A----Flow---Coût\n")
+    C=list(C)
+    for i in range(m):
+        for j in range(n):
+            if B[j][i]==-1:
+                lbl_f=Label(Frame1, text=noeuds[j])
+                lbl_f.grid(row=8+i, column=0)
+                file = open("%s.txt" % user, "a+")
+                file.write("--"+str(noeuds[j]))
+            elif B[j][i]==1:
+                lbl_t=Label(Frame1, text=noeuds[j])
+                lbl_t.grid(row=8+i, column=1)
+                file = open("%s.txt" % user, "a+")
+                file.write("--"+str(noeuds[j]))
+        lbl_c=Label(Frame1, text=res.x[i])
+        lbl_c.grid(row=8+i, column=2)
+        file = open("%s.txt" % user, "a+")
+        file.write("--"+str(res.x[i]))
+
+        lbl_tot=Label(Frame1, text=int(C[i])*res.x[i])
+        lbl_tot.grid(row=8+i, column=3)
+        file = open("%s.txt" % user, "a+")
+        file.write("--"+str(int(C[i])*res.x[i])+"\n")
+
+else:
+    lbl_echec=Label(Frame1, font=('times new roman', 20, 'bold'), text="\n\nECHEC!!", fg="darksalmon")
+    lbl_echec.grid(row=4, column=1, columnspan=2)
+    file = open("%s.txt" % user, "a+")
+    file.write("\nECHEC!!\n\n")
+
+    if res.status==1:
+        lbl_cause=Label(Frame1, font=('times new roman', 15, 'bold'), text="Problème rencontré:\nLimite d'itération atteinte", fg="darkseagreen")
+        lbl_cause.grid(row=5, column=1)
+        file = open("%s.txt" % user, "a+")
+        file.write("Problème rencontré: Limite d'itération atteinte")
+
+    elif res.status==2:
+        lbl_cause=Label(Frame1, font=('times new roman', 15, 'bold'), text="Problème rencontré:\nLe problème semble irréalisable.", fg="darkseagreen")
+        lbl_cause.grid(row=5, column=1)
+        file = open("%s.txt" % user, "a+")
+        file.write("Problème rencontré: Le problème semble irréalisable.")
+
+    elif res.status==3:
+        lbl_cause=Label(Frame1, font=('times new roman', 15, 'bold'), text="Problème rencontré:\nLe problème semble illimité.", fg="darkseagreen")
+        lbl_cause.grid(row=5, column=1)
+        file = open("%s.txt" % user, "a+")
+        file.write("Problème rencontré: Le problème semble illimité.")
+
+    elif res.status==4:
+        lbl_cause=Label(Frame1, font=('times new roman', 15, 'bold'), text="Problème rencontré:\nDifficultés numériques rencontrées", fg="darkseagreen")
+        lbl_cause.grid(row=5, column=1)
+        file = open("%s.txt" % user, "a+")
+        file.write("Problème rencontré: Difficultés numériques rencontrées")
+
+file = open("%s.txt" % user, "a+")
+# ---------------MAINLOOP---------------
+file.close()
 root.mainloop()
-
